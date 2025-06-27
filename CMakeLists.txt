@@ -13,6 +13,13 @@ FetchContent_Declare(SFML
 FetchContent_MakeAvailable(SFML)
 
 add_executable(main src/main.cpp
-        src/constants.hpp)
+        src/constants.hpp
+        src/snake.cpp
+        src/snake.hpp
+        src/node.cpp
+        src/node.hpp
+        src/doubly_linked_list.cpp
+        src/doubly_linked_list.hpp
+)
 target_compile_features(main PRIVATE cxx_std_17)
 target_link_libraries(main PRIVATE SFML::Graphics SFML::System)
