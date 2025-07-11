@@ -4,7 +4,7 @@
 
 #include "node.hpp"
 
-Node::Node(const int place, const sf::Vector2f &position) {
+Node::Node(const int place, const sf::Vector2f &position){
     this->place = place;
     this->position = position;
     this->next = nullptr;

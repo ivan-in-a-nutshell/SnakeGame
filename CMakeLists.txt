@@ -20,6 +20,8 @@ add_executable(main src/main.cpp
         src/node.hpp
         src/doubly_linked_list.cpp
         src/doubly_linked_list.hpp
+        src/utilities.hpp
+        src/random_selector.cpp
 )
 target_compile_features(main PRIVATE cxx_std_17)
 target_link_libraries(main PRIVATE SFML::Graphics SFML::System)

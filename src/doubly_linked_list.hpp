@@ -5,7 +5,9 @@
 #ifndef DOUBLY_LINKED_LIST_HPP
 #define DOUBLY_LINKED_LIST_HPP
 
+#include <unordered_set>
 #include "node.hpp"
+#include "utilities.hpp"
 
 
 class DoublyLinkedList {
@@ -13,12 +15,13 @@ class DoublyLinkedList {
     Node *tail;
 
     public:
+    std::unordered_set<sf::Vector2i, Vector2iHash> set;
     DoublyLinkedList();
-    void insertAtBeginning(int place, const sf::Vector2f &position);
+    bool insertAtBeginning(int place, const sf::Vector2f &position);
     void insertAtEnd(int place, const sf::Vector2f &position);
     void printListForward();
     ~DoublyLinkedList();
-    void moveEndToFront();
+    bool moveEndToFront(const sf::Vector2f &new_position);
     Node& getHead();
 };
 

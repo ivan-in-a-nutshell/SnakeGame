@@ -10,28 +10,36 @@ DoublyLinkedList::DoublyLinkedList() {
     this->tail = nullptr;
 }
 
-void DoublyLinkedList::insertAtBeginning(int place, const sf::Vector2f &position) {
+bool DoublyLinkedList::insertAtBeginning(const int place, const sf::Vector2f &position) {
     auto newNode = new Node(place, position);
+
+    if (this->set.count(static_cast<sf::Vector2i>(position)) > 0) {
+        return false;
+    }
+    this->set.insert(static_cast<sf::Vector2i>(position));
 
     if (this->head == nullptr) {
         this->head = newNode;
-        return;
+        this->tail = this->head;
+        return true;
     }
 
     newNode->next = this->head;
     this->head->prev = newNode;
     this->head = newNode;
+    return true;
 }
 
 void DoublyLinkedList::insertAtEnd(int place, const sf::Vector2f &position) {
     auto newNode = new Node(place, position);
+    this->set.insert(static_cast<sf::Vector2i>(position));
 
     if (this->head == nullptr) {
         this->head = newNode;
         return;
     }
 
-    if (this->tail == nullptr) {
+    if (this->tail == this->head) {
         this->head->next = newNode;
         newNode->prev = this->head;
         this->tail = newNode;
@@ -63,17 +71,32 @@ DoublyLinkedList::~DoublyLinkedList() {
     this->tail = nullptr;
 }
 
-void DoublyLinkedList::moveEndToFront() {
+bool DoublyLinkedList::moveEndToFront(const sf::Vector2f &new_position) {
     auto end = this->tail;
-    if (end == nullptr || end->prev == nullptr) {
-        return; // List is empty or has only one element
+    if (end == nullptr) {
+        return true;
     }
+
+    if (this->set.count(static_cast<sf::Vector2i>(new_position)) > 0) {
+        return false;
+    }
+
+    this->set.erase(static_cast<sf::Vector2i>(end->position));
+    if (end == this->head) {
+        end->position = new_position;
+        this->set.insert(static_cast<sf::Vector2i>(end->position));
+        return true;
+    }
+
     this->tail = end->prev;
     this->tail->next = nullptr;
     end->prev = nullptr;
     end->next = this->head;
     this->head->prev = end;
     this->head = end;
+    this->head->position = new_position;
+    this->set.insert(static_cast<sf::Vector2i>(end->position));
+    return true;
 }
 
 Node& DoublyLinkedList::getHead() {
