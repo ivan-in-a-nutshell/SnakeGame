@@ -5,14 +5,20 @@
 #ifndef NODE_HPP
 #define NODE_HPP
 
-#include <SFML/Graphics.hpp>
+#include <memory>
 
+
+template <typename T>
 struct Node {
-    int place;
-    sf::Vector2f position;
-    Node *next;
-    Node *prev;
-    Node(int place, const sf::Vector2f &position);
+    T data;
+    std::shared_ptr<Node> next;
+    std::shared_ptr<Node> prev;
+
+    explicit Node(const T &data) {
+        this->data = data;
+        this->next = nullptr;
+        this->prev = nullptr;
+    }
 };
 
 

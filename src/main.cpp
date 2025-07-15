@@ -3,29 +3,24 @@
 #include <iostream>
 #include <random>
 #include "constants.hpp"
-#include "doubly_linked_list.hpp"
 #include "random_selector.cpp"
+#include "snake.hpp"
 
 int main()
 {
-    auto window = sf::RenderWindow(sf::VideoMode{sf::Vector2u(constants::screen_size)}, "CMake SFML Project");
-    window.setFramerateLimit(60);
+    std::shared_ptr<sf::RenderWindow> window{new sf::RenderWindow{sf::VideoMode{sf::Vector2u(constants::screen_size)}, "CMake SFML Project"}};
+    window->setFramerateLimit(60);
 
     // Load the texture
-    sf::Texture texture("../../imgs/tile.png");
-    texture.setRepeated(true);
+    std::shared_ptr<sf::Texture> texture{new sf::Texture{"../../imgs/tile.png"}};
+    texture->setRepeated(true);
 
     // Create field sprite
-    sf::Sprite field(texture);
+    sf::Sprite field{*texture};
     field.setTextureRect(sf::IntRect({0, 0}, sf::Vector2<int>(constants::screen_size)));
 
     // Create a player
-    auto player = new DoublyLinkedList();
-    auto player_init_pos = constants::box_size * sf::Vector2f{static_cast<float>(static_cast<int>(constants::field_width / 2)), static_cast<float>(static_cast<int>(constants::field_height / 2))};
-    player->insertAtBeginning(0, player_init_pos);
-    std::vector<sf::Sprite> player_sprites;
-    player_sprites.emplace_back(texture);
-    player_sprites[0].setColor(sf::Color{0, 128, 255, 128});
+    auto player = Snake(texture);
 
     // Create field positions
     std::unordered_set<sf::Vector2i, Vector2iHash> field_positions;
@@ -36,81 +31,65 @@ int main()
     }
 
     // Create an apple
-    sf::Sprite apple{texture};
+    sf::Sprite apple{*texture};
     apple.setColor(sf::Color{255, 0, 0});
     apple.setScale(sf::Vector2f{constants::apple_size, constants::apple_size});
     // Place apple randomly on field
-    auto offset_pos = constants::box_size * sf::Vector2f{(1 - constants::apple_size), (1 - constants::apple_size)} / 2.f;
+    auto offset_pos = static_cast<float>(constants::box_size) * sf::Vector2f{(1 - constants::apple_size), (1 - constants::apple_size)} / 2.f;
     random_selector random_selector;
-    sf::Vector2f apple_pos{static_cast<sf::Vector2f>(random_selector(field_positions - player->set)) + offset_pos};
+    sf::Vector2f apple_pos{static_cast<sf::Vector2f>(random_selector(field_positions - player.getSet())) + offset_pos};
     apple.setPosition(apple_pos);
 
     bool apple_eaten = false;
-    bool game_playing = true;
 
-    sf::Vector2f direction{constants::up};
-    sf::Vector2f player_direction{constants::up};
     sf::Clock clock;
 
-    while (window.isOpen() && game_playing)
+    while (window->isOpen() && player.is_alive)
     {
-        while (const std::optional event = window.pollEvent()) {
+        while (const std::optional event = window->pollEvent()) {
             if (event->is<sf::Event::Closed>()) {
-                window.close();
+                window->close();
             }
         }
 
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::W) && player_direction != constants::down) {
-            direction = constants::up;
-        } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D) && player_direction != constants::left) {
-            direction = constants::right;
-        } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::S) && player_direction != constants::up) {
-            direction = constants::down;
-        } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A) && player_direction != constants::right) {
-            direction = constants::left;
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::W) && player.current_direction != constants::down) {
+            player.future_direction = constants::up;
+        } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D) && player.current_direction != constants::left) {
+            player.future_direction = constants::right;
+        } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::S) && player.current_direction != constants::up) {
+            player.future_direction = constants::down;
+        } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A) && player.current_direction != constants::right) {
+            player.future_direction = constants::left;
         }
 
         if (clock.getElapsedTime().asMilliseconds() > 200) {
             if (apple_eaten) {
-                game_playing = player->insertAtBeginning(0, player->getHead().position + direction);
-                player_sprites.emplace_back(texture);
-                player_sprites.back().setColor(sf::Color{0, 128, 255});
+                player.addSegment(player.getHeadPos() + static_cast<sf::Vector2i>(player.future_direction));
                 apple_eaten = false;
             } else {
-                game_playing = player->moveEndToFront(player->getHead().position + direction);
+                player.moveSegment(player.getHeadPos() + static_cast<sf::Vector2i>(player.future_direction));
             }
 
-            if (0.f > player->getHead().position.x || player->getHead().position.x > constants::screen_size.x
-                || 0.f > player->getHead().position.y || player-> getHead().position.y > constants::screen_size.y) {
-                game_playing = false;
+            if (0 > player.getHeadPos().x || player.getHeadPos().x > static_cast<int>(constants::screen_size.x)
+                || 0 > player.getHeadPos().y || player.getHeadPos().y > static_cast<int>(constants::screen_size.y)) {
+                player.is_alive = false;
             }
 
-            if (static_cast<sf::Vector2i>(player->getHead().position) == static_cast<sf::Vector2i>(apple.getPosition() - offset_pos)) {
-                apple_pos = sf::Vector2f(random_selector(field_positions - player->set)) + offset_pos;
+            if (player.getHeadPos() == static_cast<sf::Vector2i>(apple.getPosition() - offset_pos)) {
+                apple_pos = sf::Vector2f(random_selector(field_positions - player.getSet())) + offset_pos;
                 apple.setPosition(apple_pos);
                 apple_eaten = true;
             }
 
-            player_direction = direction;
+            player.current_direction = player.future_direction;
 
             clock.restart();
         }
 
-        window.clear();
-        window.draw(field);
-
-        int i = 0;
-        Node *current = &player->getHead();
-        while (current != nullptr) {
-            player_sprites[i].setPosition(current->position);
-            window.draw(player_sprites[i]);
-            current = current->next;
-            ++i;
-        }
-        delete current;
-
-        window.draw(apple);
-
-        window.display();
+        window->clear();
+        window->draw(field);
+        player.updateSprites(window);
+        window->draw(apple);
+        window->display();
     }
 }
