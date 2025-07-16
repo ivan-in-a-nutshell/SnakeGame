@@ -5,7 +5,7 @@
 #include "snake.hpp"
 #include "constants.hpp"
 
-Snake::Snake(const std::shared_ptr<sf::Texture> &texture){
+Snake::Snake(const sf::Texture &texture){
     this->body = DoublyLinkedList<sf::Vector2i>();
     this->set = std::unordered_set<sf::Vector2i, Vector2iHash>();
     this->current_direction = constants::up;
@@ -19,7 +19,7 @@ Snake::Snake(const std::shared_ptr<sf::Texture> &texture){
 }
 
 void Snake::addTexture() {
-    this->sprites.emplace_back(*this->texture);
+    this->sprites.emplace_back(this->texture);
     this->sprites.back().setColor(constants::player_color);
 }
 

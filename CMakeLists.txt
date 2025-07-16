@@ -20,6 +20,10 @@ add_executable(main src/main.cpp
         src/random_selector.cpp
         src/snake.cpp
         src/snake.hpp
+        src/apple.cpp
+        src/apple.hpp
+        src/field.cpp
+        src/field.hpp
 )
 target_compile_features(main PRIVATE cxx_std_17)
 target_link_libraries(main PRIVATE SFML::Graphics SFML::System)
